@@ -1,5 +1,5 @@
 [package]
-name = "R2OT"
+name = "r2ot"
 version = "0.1.0"
 authors = ["Ronan DEMIMUID <ronan.demimuid@rubycat.eu>"]
 edition = "2018"
@@ -7,3 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+imap = "2.4.1"
+tui = "0.16"
+termion = "1.5.6"
+native-tls = "0.2.2"

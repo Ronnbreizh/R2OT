@@ -1,48 +1,26 @@
-use std::{collections::BTreeMap, net::TcpStream};
+use std::net::TcpStream;
 
 use imap::Session;
 use native_tls::TlsStream;
-
-use crate::{r2ot::SubApp, event::EventControl};
 
 use super::{Mail, mail::MailServer};
 
 /// Generic email client able to receive and send mails
 pub struct ImapClient {
-    email: String,
-    password: String,
     mail_server: MailServer,
-
     session: Option<Session<TlsStream<TcpStream>>>
 }
 
 impl ImapClient {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self{
-            email: String::from("Unknown"),
-            password: String::from("Unknown"),
             mail_server: MailServer::Unknown,
             session: None,
         }
     }
 
-    fn set_password<'a>(&'a mut self, password: String) -> &'a mut Self {
-        self.password = password;
-        self
-    }
-
-    fn set_email<'a>(&'a mut self, email: String) -> &'a mut Self {
-        self.email = email;
-        self
-    }
-
-    fn set_server<'a>(&'a mut self, server: MailServer) -> &'a mut Self {
-        self.mail_server = server;
-        self
-    }
-
     /// Select mail box
-    fn select_mailbox(&mut self, mail_name: &str) {
+    pub fn select_mailbox(&mut self, mail_name: &str) {
         self.session.as_mut().unwrap().select(mail_name).unwrap();
     }
 
@@ -63,15 +41,21 @@ impl ImapClient {
         Vec::new()
     }
 
-    fn connect(&mut self) {
-        let domain = "imap.gmail.com";
-        let tls = native_tls::TlsConnector::builder().build().unwrap();
-        let client = imap::connect(self.mail_server.address(), domain, &tls).unwrap();
-        let imap_session = client.login(self.email.clone(), self.password.clone()).unwrap();
+    pub fn connect(&mut self, email: String, password: String, hostname: String) {
+        let tls = native_tls::TlsConnector::builder()
+            .build()
+            .unwrap();
+
+        self.mail_server = MailServer::Imap(hostname.clone());
+
+        let client = imap::connect(self.mail_server.address(), hostname, &tls)
+            .unwrap();
+        let imap_session = client.login(email, password)
+            .unwrap();
         self.session = Some(imap_session);
     }
 
-    fn disconnect(&mut self) {
+    pub fn disconnect(&mut self) {
         self.session.as_mut().unwrap().logout().unwrap();
     }
 }

@@ -1,6 +1,8 @@
 mod client;
+mod connection;
 mod imap;
 mod mail;
 
 pub use mail::Mail;
-pub use self::imap::ImapClient;
+
+pub use client::MailClient;

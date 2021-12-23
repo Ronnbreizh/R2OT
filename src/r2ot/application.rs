@@ -3,7 +3,7 @@ use std::{time::Duration, io::Stdout};
 use termion::{raw::{IntoRawMode, RawTerminal}, event::Key};
 use tui::{backend::TermionBackend, Terminal};
 
-use crate::event::{events, Event, EventControl};
+use crate::{event::{events, Event, EventControl}, mail::MailClient};
 
 use super::subapp::{SubAppStub, SubApp};
 
@@ -16,7 +16,7 @@ pub struct Application<'a> {
     pub(super) app_name: &'a str,
     pub(super) tabs_titles: [&'a str; SUB_APP_NUMBER], 
     pub(super) current_tab: usize,
-    pub(super) mail_client : SubAppStub,
+    pub(super) mail_client : MailClient,
     pub(super) calendar : SubAppStub,
     pub(super) task_manager : SubAppStub,
 }
@@ -30,7 +30,7 @@ impl<'a> Application<'a> {
             current_tab: 0,
             tabs_titles: ["emails", "calendar", "tasks"],
             // other
-            mail_client : SubAppStub::new("test".to_string()),
+            mail_client : MailClient::new(),
             calendar :SubAppStub::new("Lol".to_string()),
             task_manager : SubAppStub::new("Micha".to_string()),
         }

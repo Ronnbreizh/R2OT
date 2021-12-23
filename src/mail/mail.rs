@@ -7,11 +7,12 @@ pub enum MailServer {
 
 impl MailServer {
     pub fn address(&self) -> (String, u16) {
-        match self {
-            MailServer::Unknown => ("Unknown".to_string(), 0),
-            MailServer::Imap(domain) => (domain.clone(), 993),
-            MailServer::Pop(domain) => (domain.clone(), 993),
-        }
+        // match self {
+        //     MailServer::Unknown => ("Unknown".to_string(), 0),
+        //     MailServer::Imap(domain) => (domain.clone(), 993),
+        //     MailServer::Pop(domain) => (domain.clone(), 993),
+        // }
+        ("imap.gmail.com".to_string(), 993)
     }
 }
 

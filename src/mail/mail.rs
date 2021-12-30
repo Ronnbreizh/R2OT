@@ -1,3 +1,5 @@
+use mailparse::MailHeaderMap;
+
 /// Protocols for receiving from mail servers
 pub enum MailServer {
     Unknown,
@@ -7,27 +9,32 @@ pub enum MailServer {
 
 impl MailServer {
     pub fn address(&self) -> (String, u16) {
-        // match self {
-        //     MailServer::Unknown => ("Unknown".to_string(), 0),
-        //     MailServer::Imap(domain) => (domain.clone(), 993),
-        //     MailServer::Pop(domain) => (domain.clone(), 993),
-        // }
-        ("imap.gmail.com".to_string(), 993)
+        match self {
+            MailServer::Unknown => ("Unknown".to_string(), 0),
+            MailServer::Imap(domain) => (domain.clone(), 993),
+            MailServer::Pop(domain) => (domain.clone(), 993),
+        }
     }
 }
 
 pub struct Mail {
-    sender: String,
-    subject: String,
-    content: String,
+    pub sender: String,
+    pub subject: String,
+    pub content: String,
     // TODO
     // _file: !,
 }
 
 impl Mail {
-    fn new(sender: String, subject: String, content: String) -> Self {
+    /// TODO
+    pub fn parse(body: &[u8]) -> Self {
+
+        let parsed_mail = mailparse::parse_mail(body).unwrap();
+
         Self {
-            sender, subject, content
+            subject: parsed_mail.headers.get_first_value("Subject").unwrap(),
+            sender: parsed_mail.headers.get_first_value("From").unwrap(),
+            content: parsed_mail.get_body().unwrap(),
         }
     }
 

@@ -1,31 +1,27 @@
 use termion::event::Key;
-use tui::layout::Layout;
 
-use crate::{event::{EventControl, Event}, r2ot::SubApp, utils::TextBox};
+use crate::{event::{EventControl, Event}, r2ot::SubApp};
 
-use super::{connection::ConnectionWidget, imap::ImapClient};
+use super::{connection::ConnectionWidget, mailbox::MailBox};
 
 pub struct MailClient {
-    receiver: ImapClient,
     connected: bool,
     connection_widget: ConnectionWidget,
+    mailbox: MailBox,
 }
 
 impl MailClient {
     pub fn new() -> Self {
         Self {
-            receiver: ImapClient::new(),
             connected: false,
             connection_widget: ConnectionWidget::new(),
+            mailbox: MailBox::new(),
         }
     }
 
     fn connect(&mut self) {
-
         let (email, password, hostname) = self.connection_widget.credentials();
-
-        self.receiver.connect(email, password, hostname);
-
+        self.mailbox.connect(email, password, hostname);
         self.connected = true;
     }
 
@@ -41,6 +37,10 @@ impl MailClient {
         }
     }
 
+    fn handle_event_mailbox(&mut self, event: Event) -> EventControl {
+        self.mailbox.handle_event(event)
+    }
+
 }
 
 impl SubApp for MailClient {
@@ -48,7 +48,7 @@ impl SubApp for MailClient {
         if !self.connected {
             self.handle_event_connection(event)
         } else {
-            EventControl::OK
+            self.handle_event_mailbox(event)
         }
     }
 
@@ -57,8 +57,7 @@ impl SubApp for MailClient {
         if !self.connected {
             self.connection_widget.draw(f, rect);
         } else {
-            let text = tui::widgets::Paragraph::new("DES MAILS EN PAGAILLE".to_string());
-            f.render_widget(text, rect);
+            self.mailbox.draw(f, rect);
         }
     }
 }

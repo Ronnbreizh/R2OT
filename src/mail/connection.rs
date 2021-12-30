@@ -37,11 +37,11 @@ pub struct ConnectionWidget {
 
 impl ConnectionWidget {
     pub fn new() -> Self {
-        let mut email = TextBox::new();
+        let mut email = TextBox::new("username / email".to_string());
         email.set_selected(true);
-        let mut password = TextBox::new();
+        let mut password = TextBox::new("password".to_string());
         password.password_mode();
-        let mail_server = TextBox::new();
+        let mail_server = TextBox::new("Imap server".to_string());
 
         Self {
             current_field: CurrentField::Email,

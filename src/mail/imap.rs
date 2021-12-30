@@ -8,7 +8,9 @@ use super::{Mail, mail::MailServer};
 /// Generic email client able to receive and send mails
 pub struct ImapClient {
     mail_server: MailServer,
-    session: Option<Session<TlsStream<TcpStream>>>
+
+    current_mail: Option<imap::types::Mailbox>,
+    session: Option<Session<TlsStream<TcpStream>>>,
 }
 
 impl ImapClient {
@@ -16,29 +18,37 @@ impl ImapClient {
         Self{
             mail_server: MailServer::Unknown,
             session: None,
+            current_mail: None,
         }
+    }
+
+    pub fn retrieve_mailboxes(&mut self) -> Vec<String> {
+        let mailboxes = self.session.as_mut().unwrap()
+            .list(Some("*"), Some("*")).unwrap();
+        mailboxes.into_iter().map(|name| name.name().to_string()).collect()
     }
 
     /// Select mail box
     pub fn select_mailbox(&mut self, mail_name: &str) {
-        self.session.as_mut().unwrap().select(mail_name).unwrap();
+        let mailbox = self.session.as_mut().unwrap().select(mail_name).unwrap();
+        self.current_mail = Some(mailbox);
     }
 
     /// Read all mails in current inbox
-    fn read_mails(&mut self) -> Vec<Mail> {
-        // fetch message number 1 in this mailbox, along with its RFC822 field.
+    pub fn read_mails(&mut self) -> Vec<Mail> {
         // RFC 822 dictates the format of the body of e-mails
-        let messages = self.session.as_mut().unwrap().fetch("1", "RFC822").unwrap();
-        let message = messages.first().unwrap();
-        // extract the message's body
 
-        let body = message.body().expect("message did not have a body!");
-        let body = std::str::from_utf8(body)
-            .expect("message was not valid utf-8")
-            .to_string();
+        let last_message_id = self.current_mail.as_ref().unwrap().exists;
 
-        println!("Message: {:?}", body);
-        Vec::new()
+        let sequence = format!("{}:{}", last_message_id-20, last_message_id);
+
+        let messages = self.session.as_mut().unwrap().fetch(sequence, "RFC822").unwrap();
+
+        let mails = messages.into_iter()
+            .map(|message| message.body().expect("No body..."))
+            .map(|body| Mail::parse(body))
+            .collect();
+        mails
     }
 
     pub fn connect(&mut self, email: String, password: String, hostname: String) {
@@ -47,7 +57,6 @@ impl ImapClient {
             .unwrap();
 
         self.mail_server = MailServer::Imap(hostname.clone());
-
         let client = imap::connect(self.mail_server.address(), hostname, &tls)
             .unwrap();
         let imap_session = client.login(email, password)
